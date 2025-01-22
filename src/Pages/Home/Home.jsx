@@ -1,33 +1,20 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import Typography from "@mui/material/Typography";
-import {
-  Card,
-  Button,
-  TextField,
-  Chip,
-  IconButton,
-  Menu,
-  MenuItem,
-} from "@mui/material";
-import { SketchPicker, CirclePicker, TwitterPicker } from "react-color"; // Import react-color library for the color picker
+import { Card, Chip, IconButton, Menu } from "@mui/material";
+import { TwitterPicker } from "react-color";
 import { motion } from "framer-motion";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import AddIcon from "@mui/icons-material/Add";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { useNavigate } from "react-router-dom";
+import { DataContext } from "../../Context/DataContext";
+
+import { Category, Navbar } from "../../Components";
 
 export default function Home() {
   const navigate = useNavigate();
-  const [todos, setTodos] = useState(() => {
-    const savedTodos = localStorage.getItem("todos");
-    return savedTodos
-      ? JSON.parse(savedTodos)
-      : {
-          "Not-Started": [1, 2, 3, 4, 5],
-          "In-Progress": [6, 7, 8, 9, 10],
-          Completed: [11, 12, 13, 14, 15],
-        };
-  });
+
+  const [todos, setTodos] = useContext(DataContext);
 
   const [newCategory, setNewCategory] = useState("");
   const [chipColors, setChipColors] = useState(() => {
@@ -57,14 +44,18 @@ export default function Home() {
   };
 
   const handleDrop = (e, targetContainer) => {
-    const item = dragItem.current;
+    const taskId = dragItem.current;
     const sourceContainer = dragContainer.current;
+
     setTodos((prev) => {
       const newData = { ...prev };
+      const task = newData[sourceContainer].find((t) => t.id === taskId);
+
       newData[sourceContainer] = newData[sourceContainer].filter(
-        (i) => i !== item
+        (t) => t.id !== taskId
       );
-      newData[targetContainer] = [...newData[targetContainer], item];
+      newData[targetContainer] = [...newData[targetContainer], task];
+
       return newData;
     });
   };
@@ -74,17 +65,28 @@ export default function Home() {
   };
 
   const handleAddCard = (container) => {
-    const newId = Math.max(...Object.values(todos).flat(), 0) + 1;
+    const newId =
+      Math.max(
+        ...Object.values(todos)
+          .flat()
+          .map((task) => task.id),
+        0
+      ) + 1;
+    const newTask = {
+      id: newId,
+      title: `New Task ${newId}`,
+      description: "Description of the new task",
+    };
     setTodos((prev) => ({
       ...prev,
-      [container]: [...prev[container], newId],
+      [container]: [...prev[container], newTask],
     }));
   };
 
-  const handleDeleteCard = (container, item) => {
+  const handleDeleteCard = (container, taskId) => {
     setTodos((prev) => ({
       ...prev,
-      [container]: prev[container].filter((i) => i !== item),
+      [container]: prev[container].filter((task) => task.id !== taskId),
     }));
   };
 
@@ -132,34 +134,11 @@ export default function Home() {
       }}
       className="no-scroll"
     >
-      <div
-        style={{
-          marginBottom: "40px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-        }}
-      >
-        <Typography variant="h6" color="primary">
-          Task Board
-        </Typography>
-        <div style={{ display: "flex", gap: "20px" }}>
-          <TextField
-            label="New Category"
-            variant="outlined"
-            size="small"
-            value={newCategory}
-            onChange={(e) => setNewCategory(e.target.value)}
-          />
-          <Button
-            variant="contained"
-            onClick={handleAddCategory}
-            disabled={!newCategory.trim()}
-          >
-            <AddIcon />
-          </Button>
-        </div>
-      </div>
+      <Navbar
+        newCategory={newCategory}
+        setNewCategory={setNewCategory}
+        handleAddCategory={handleAddCategory}
+      />
 
       <div
         style={{ display: "flex", gap: "100px", overflowX: "scroll" }}
@@ -172,6 +151,7 @@ export default function Home() {
             onDragOver={handleDragOver}
             layout
           >
+            {/* <Category /> */}
             <div
               style={{
                 display: "flex",
@@ -234,10 +214,10 @@ export default function Home() {
               </div>
             </div>
             <motion.div layout>
-              {todos[container].map((item, index) => (
+              {todos[container].map((task) => (
                 <motion.div
                   layout
-                  key={item}
+                  key={task.id}
                   whileHover={{ scale: 1.05 }}
                   whileDrag={{
                     scale: 1.1,
@@ -247,7 +227,7 @@ export default function Home() {
                   drag
                   dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
                   dragTransition={{ bounceStiffness: 600, bounceDamping: 20 }}
-                  onClick={() => navigate(`/task/${item}`)}
+                  onClick={() => navigate(`/task/${task.id}`)}
                 >
                   <Card
                     variant="outlined"
@@ -260,7 +240,7 @@ export default function Home() {
                       cursor: "grab",
                     }}
                     draggable
-                    onDragStart={(e) => handleDragStart(e, item, container)}
+                    onDragStart={(e) => handleDragStart(e, task.id, container)}
                     onDragEnd={handleDragEnd}
                   >
                     <div
@@ -270,17 +250,20 @@ export default function Home() {
                         justifyContent: "space-between",
                       }}
                     >
-                      <Typography variant="subtitle2">Card {item}</Typography>
+                      <Typography variant="subtitle2">{task.title}</Typography>
                       <IconButton
                         size="small"
                         onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteCard(container, item);
+                          e.stopPropagation(); // Prevent navigation
+                          handleDeleteCard(container, task.id);
                         }}
                       >
                         <DeleteOutlineIcon fontSize="small" color="error" />
                       </IconButton>
                     </div>
+                    <Typography variant="body2" color="textSecondary">
+                      {task.description}
+                    </Typography>
                   </Card>
                 </motion.div>
               ))}
