@@ -55,12 +55,12 @@
   <br><br>
   <div style="display: flex; justify-content: center;">
     <div style="text-align: center; margin: 10px;">
-      <img src="readme_assets\move2.png" alt="Before Dragging" width="800">
+      <img src="readme_assets\move1.png" alt="Before Dragging" width="800">
       <p><strong>Before:</strong> Task 1 is in the Not-Started List</p>
     </div>
     <br>
     <div style="text-align: center; margin: 10px;">
-      <img src="readme_assets\move3.png" alt="After Dragging" width="800">
+      <img src="readme_assets\move2.png" alt="After Dragging" width="800">
       <p><strong>After:</strong> Task 1 is dragged and dropped to the In-Progress List</p>
     </div>
   </div>
