@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useContext } from "react";
 import Typography from "@mui/material/Typography";
-import { Card, Chip, IconButton, Menu } from "@mui/material";
+import { Card, Chip, IconButton, Menu, Button } from "@mui/material";
 import { TwitterPicker } from "react-color";
 import { motion } from "framer-motion";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -127,6 +127,7 @@ export default function Home() {
         padding: "40px",
         border: "1px solid #d4d4d4",
         borderRadius: "20px",
+        minWidth: "1000px",
         maxWidth: "1200px",
         minHeight: "600px",
         maxHeight: "600px",
@@ -196,6 +197,7 @@ export default function Home() {
                   }}
                 >
                   <div style={{ padding: "18px" }}>
+                    {/* Chip Color Picker */}
                     <Typography sx={{ marginBottom: "10px" }}>
                       Chip color
                     </Typography>
@@ -203,8 +205,79 @@ export default function Home() {
                       color={chipColors[selectedCategory] || "#e0e0e0"}
                       onChangeComplete={handleColorChange}
                     />
+
+                    {/* Rename Category */}
+                    <div style={{ marginTop: "20px" }}>
+                      <Typography sx={{ marginBottom: "10px" }}>
+                        Rename Category
+                      </Typography>
+                      <input
+                        type="text"
+                        value={selectedCategory || ""}
+                        onChange={(e) => {
+                          const newName = e.target.value;
+                          if (!newName.trim()) return;
+
+                          setTodos((prev) => {
+                            const newData = { ...prev };
+                            const tasks = newData[selectedCategory];
+                            delete newData[selectedCategory];
+                            newData[newName] = tasks;
+                            return newData;
+                          });
+
+                          setChipColors((prev) => {
+                            const newColors = { ...prev };
+                            const color = newColors[selectedCategory];
+                            delete newColors[selectedCategory];
+                            newColors[newName] = color;
+                            return newColors;
+                          });
+
+                          setSelectedCategory(newName);
+                        }}
+                        placeholder="Enter new category name"
+                        style={{
+                          width: "100%",
+                          padding: "8px",
+                          border: "1px solid #d4d4d4",
+                          borderRadius: "4px",
+                          marginBottom: "10px",
+                        }}
+                      />
+                    </div>
+
+                    {/* Delete Category */}
+                    <Button
+                      fullWidth
+                      variant="contained"
+                      color="error"
+                      style={{
+                        marginTop: "20px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                      }}
+                      onClick={() => {
+                        setTodos((prev) => {
+                          const newData = { ...prev };
+                          delete newData[selectedCategory];
+                          return newData;
+                        });
+                        setChipColors((prev) => {
+                          const newColors = { ...prev };
+                          delete newColors[selectedCategory];
+                          return newColors;
+                        });
+                        handleClose();
+                      }}
+                    >
+                      <Typography>Delete Category</Typography>
+                      <DeleteOutlineIcon />
+                    </Button>
                   </div>
                 </Menu>
+
                 <IconButton
                   size="small"
                   onClick={() => handleAddCard(container)}
